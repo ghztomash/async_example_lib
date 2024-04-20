@@ -3,10 +3,11 @@ pub mod provider;
 pub mod response;
 
 use error::Error;
+use provider::ServiceProvider;
 use response::Response;
 
 pub async fn perform_request() -> Result<Response, Error> {
-    let provider = provider::Service::new();
+    let provider = provider::Service::new(ServiceProvider::HttpBin);
     provider.request().await
 }
 

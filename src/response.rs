@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, PartialEq)]
 pub struct Response {
     pub content: String,
 }
