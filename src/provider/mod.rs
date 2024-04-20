@@ -4,10 +4,15 @@ pub mod mock;
 use crate::error::Error;
 use crate::response::Response;
 
+use reqwest::RequestBuilder;
 use reqwest::StatusCode;
 
 #[async_trait::async_trait]
 pub trait Provider {
+    fn get_endpoint(&self) -> String;
+    fn add_auth(&self, request: RequestBuilder) -> RequestBuilder {
+        request
+    }
     async fn make_api_request(&self) -> Result<String, Error>;
     fn parse_reply(&self, content: String) -> Result<Response, Error>;
 }
