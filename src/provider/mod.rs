@@ -4,17 +4,23 @@ pub mod mock;
 use crate::error::Error;
 use crate::response::Response;
 
+use reqwest::Client;
 use reqwest::RequestBuilder;
 use reqwest::StatusCode;
 
-#[async_trait::async_trait]
 pub trait Provider {
     fn get_endpoint(&self) -> String;
+
+    fn parse_reply(&self, content: String) -> Result<Response, Error>;
+
+    fn get_client(&self) -> RequestBuilder {
+        let client = Client::new().get(self.get_endpoint());
+        self.add_auth(client)
+    }
+
     fn add_auth(&self, request: RequestBuilder) -> RequestBuilder {
         request
     }
-    async fn make_api_request(&self) -> Result<String, Error>;
-    fn parse_reply(&self, content: String) -> Result<Response, Error>;
 }
 
 pub enum ServiceProvider {
@@ -43,9 +49,15 @@ impl Service {
     }
 
     pub async fn request(&self) -> Result<Response, Error> {
-        let response = self.provider.make_api_request().await?;
+        let client = self.provider.get_client();
+        let response = make_api_request(client).await?;
         self.provider.parse_reply(response)
     }
+}
+
+async fn make_api_request(client: RequestBuilder) -> Result<String, Error> {
+    let response = client.send().await;
+    handle_response(response).await
 }
 
 async fn handle_response(response: reqwest::Result<reqwest::Response>) -> Result<String, Error> {
