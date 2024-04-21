@@ -5,6 +5,11 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["async"]
+sync = [ ]
+async = [ ]
+
 [dependencies]
 reqwest = { version = "0.12", features = ["blocking"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -12,6 +17,7 @@ serde_json = "1.0"
 thiserror = "1.0"
 log = "0.4"
 async-trait = "0.1"
+synca = "0.5"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

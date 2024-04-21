@@ -1,6 +1,31 @@
 pub mod httpbin;
 pub mod mock;
 
+#[cfg(feature = "sync")]
+pub use synchr::{Provider, ServiceProvider, Service};
+#[cfg(feature = "async")]
+pub use asynchr::{Provider, ServiceProvider, Service};
+
+#[synca::synca(
+    #[cfg(feature = "async")]
+    pub mod asynchr { },
+    #[cfg(feature = "sync")]
+    pub mod synchr { 
+        sync!();
+        replace!(
+            reqwest::get => reqwest::blocking::get,
+            reqwest::Client => reqwest::blocking::Client,
+            reqwest::Response => reqwest::blocking::Response,
+            reqwest::RequestBuilder => reqwest::blocking::RequestBuilder,
+            #[tokio::test] => #[test]
+        );
+    }
+)]
+mod provider {
+
+use super::httpbin;
+use super::mock;
+
 use crate::error::Error;
 use crate::response::Response;
 
@@ -101,4 +126,5 @@ mod tests {
             body
         );
     }
+}
 }
