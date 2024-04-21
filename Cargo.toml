@@ -12,6 +12,7 @@ serde_json = "1.0"
 thiserror = "1.0"
 log = "0.4"
 async-trait = "0.1"
+maybe-async = { version = "0.2", features = ["is_sync"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

@@ -13,11 +13,13 @@ pub trait Provider {
 
     fn parse_reply(&self, content: String) -> Result<Response, Error>;
 
+    #[inline]
     fn get_client(&self) -> RequestBuilder {
         let client = Client::new().get(self.get_endpoint());
         self.add_auth(client)
     }
 
+    #[inline]
     fn add_auth(&self, request: RequestBuilder) -> RequestBuilder {
         request
     }
@@ -48,11 +50,13 @@ impl Service {
         }
     }
 
+    #[maybe_async::maybe_async]
     pub async fn request(&self) -> Result<Response, Error> {
         let response = self.make_api_request().await?;
         self.provider.parse_reply(response)
     }
 
+    #[maybe_async::maybe_async]
     async fn make_api_request(&self) -> Result<String, Error> {
         let response = self.provider.get_client().send().await;
         handle_response(response).await

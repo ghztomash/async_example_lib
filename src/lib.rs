@@ -6,6 +6,7 @@ use error::Error;
 use provider::ServiceProvider;
 use response::Response;
 
+#[maybe_async::maybe_async]
 pub async fn perform_request() -> Result<Response, Error> {
     let provider = provider::Service::new(ServiceProvider::HttpBin);
     provider.request().await
