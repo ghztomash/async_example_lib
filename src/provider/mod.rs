@@ -4,8 +4,11 @@ pub mod mock;
 use crate::error::Error;
 use crate::response::Response;
 
-use reqwest::Client;
-use reqwest::RequestBuilder;
+#[cfg(feature = "sync")]
+pub use reqwest::blocking::{Client, RequestBuilder};
+#[cfg(feature = "async")]
+pub use reqwest::{Client, RequestBuilder};
+
 use reqwest::StatusCode;
 
 pub trait Provider {
@@ -48,17 +51,32 @@ impl Service {
         }
     }
 
+    #[cfg(feature = "async")]
     pub async fn request(&self) -> Result<Response, Error> {
         let response = self.make_api_request().await?;
         self.provider.parse_reply(response)
     }
 
+    #[cfg(feature = "async")]
     async fn make_api_request(&self) -> Result<String, Error> {
         let response = self.provider.get_client().send().await;
         handle_response(response).await
     }
+
+    #[cfg(feature = "sync")]
+    pub fn request(&self) -> Result<Response, Error> {
+        let response = self.make_api_request()?;
+        self.provider.parse_reply(response)
+    }
+
+    #[cfg(feature = "sync")]
+    fn make_api_request(&self) -> Result<String, Error> {
+        let response = self.provider.get_client().send();
+        handle_response(response)
+    }
 }
 
+#[cfg(feature = "async")]
 async fn handle_response(response: reqwest::Result<reqwest::Response>) -> Result<String, Error> {
     match response {
         Ok(response) => match response.status() {
@@ -69,6 +87,20 @@ async fn handle_response(response: reqwest::Result<reqwest::Response>) -> Result
     }
 }
 
+#[cfg(feature = "sync")]
+fn handle_response(
+    response: reqwest::Result<reqwest::blocking::Response>,
+) -> Result<String, Error> {
+    match response {
+        Ok(response) => match response.status() {
+            StatusCode::OK => Ok(response.text().unwrap()),
+            s => Err(Error::CriticalError(s.to_string())),
+        },
+        Err(e) => Err(Error::CriticalError(e.to_string())),
+    }
+}
+
+#[cfg(feature = "async")]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,6 +124,41 @@ mod tests {
     async fn test_handle_response_error() {
         let response = reqwest::get("https://httpbin.org/status/500").await;
         let body = handle_response(response).await;
+        assert!(body.is_err(), "Response should be an error {:#?}", body);
+        let body = body.unwrap_err();
+        assert_eq!(
+            body.to_string(),
+            "Critical error",
+            "Wrong error {:#?}",
+            body
+        );
+    }
+}
+
+#[cfg(feature = "sync")]
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_make_request() {
+        let expected = "hello mock".to_string();
+        let provider = Service::new(ServiceProvider::Mock);
+        let response = provider.request().unwrap();
+        assert_eq!(response.content, expected);
+    }
+
+    #[test]
+    fn test_handle_response() {
+        let response = reqwest::blocking::get("https://httpbin.org/status/200");
+        let body = handle_response(response);
+        assert!(body.is_ok(), "Response is an error {:#?}", body);
+    }
+
+    #[test]
+    fn test_handle_response_error() {
+        let response = reqwest::blocking::get("https://httpbin.org/status/500");
+        let body = handle_response(response);
         assert!(body.is_err(), "Response should be an error {:#?}", body);
         let body = body.unwrap_err();
         assert_eq!(
