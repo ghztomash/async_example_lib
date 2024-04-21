@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["async"]
+default = []
 sync = [ ]
 async = [ ]
 
@@ -21,3 +21,6 @@ synca = "0.5"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
+
+[[example]]
+name = "simple"

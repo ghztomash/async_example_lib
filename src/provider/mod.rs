@@ -6,6 +6,12 @@ pub use synchr::{Provider, ServiceProvider, Service};
 #[cfg(feature = "async")]
 pub use asynchr::{Provider, ServiceProvider, Service};
 
+#[cfg(feature = "sync")]
+pub use reqwest::blocking::{RequestBuilder, Client};
+
+#[cfg(feature = "async")]
+pub use reqwest::{RequestBuilder, Client};
+
 #[synca::synca(
     #[cfg(feature = "async")]
     pub mod asynchr { },
@@ -26,20 +32,21 @@ mod provider {
 use super::httpbin;
 use super::mock;
 
+use crate::provider::{RequestBuilder, Client};
 use crate::error::Error;
 use crate::response::Response;
 
-use reqwest::Client;
-use reqwest::RequestBuilder;
 use reqwest::StatusCode;
 
 pub trait Provider {
+
     fn get_endpoint(&self) -> String;
 
     fn parse_reply(&self, content: String) -> Result<Response, Error>;
 
     fn get_client(&self) -> RequestBuilder {
-        let client = Client::new().get(self.get_endpoint());
+        let client = Client::new();
+        let client = client.get(self.get_endpoint());
         self.add_auth(client)
     }
 
@@ -109,6 +116,8 @@ mod tests {
     #[tokio::test]
     async fn test_handle_response() {
         let response = reqwest::get("https://httpbin.org/status/200").await;
+        #[cfg(feature = "sync")]
+        let response = reqwest::blocking::get("https://httpbin.org/status/200");
         let body = handle_response(response).await;
         assert!(body.is_ok(), "Response is an error {:#?}", body);
     }
@@ -116,6 +125,8 @@ mod tests {
     #[tokio::test]
     async fn test_handle_response_error() {
         let response = reqwest::get("https://httpbin.org/status/500").await;
+        #[cfg(feature = "sync")]
+        let response = reqwest::blocking::get("https://httpbin.org/status/200");
         let body = handle_response(response).await;
         assert!(body.is_err(), "Response should be an error {:#?}", body);
         let body = body.unwrap_err();
