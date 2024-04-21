@@ -49,15 +49,14 @@ impl Service {
     }
 
     pub async fn request(&self) -> Result<Response, Error> {
-        let client = self.provider.get_client();
-        let response = make_api_request(client).await?;
+        let response = self.make_api_request().await?;
         self.provider.parse_reply(response)
     }
-}
 
-async fn make_api_request(client: RequestBuilder) -> Result<String, Error> {
-    let response = client.send().await;
-    handle_response(response).await
+    async fn make_api_request(&self) -> Result<String, Error> {
+        let response = self.provider.get_client().send().await;
+        handle_response(response).await
+    }
 }
 
 async fn handle_response(response: reqwest::Result<reqwest::Response>) -> Result<String, Error> {

@@ -1,8 +1,7 @@
-pub struct Mock;
-
 use crate::{error::Error, provider::Provider, response::Response};
 
-#[async_trait::async_trait]
+pub struct Mock;
+
 impl Provider for Mock {
     fn get_endpoint(&self) -> String {
         "https://httpbin.org/status/200".to_string()
