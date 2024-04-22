@@ -95,7 +95,7 @@ mod tests {
         async(not(feature="blocking"), tokio::test)
     )]
     async fn test_handle_response() {
-        let response = reqwest::get("https://httpbin.org/status/200").await;
+        let response = client::get("https://httpbin.org/status/200").await;
         let body = handle_response(response).await;
         assert!(body.is_ok(), "Response is an error {:#?}", body);
     }
@@ -105,7 +105,7 @@ mod tests {
         async(not(feature="blocking"), tokio::test)
     )]
     async fn test_handle_response_error() {
-        let response = reqwest::get("https://httpbin.org/status/500").await;
+        let response = client::get("https://httpbin.org/status/500").await;
         let body = handle_response(response).await;
         assert!(body.is_err(), "Response should be an error {:#?}", body);
         let body = body.unwrap_err();

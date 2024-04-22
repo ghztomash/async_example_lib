@@ -20,3 +20,6 @@ tokio-test = "0.4"
 
 [features]
 blocking = ["maybe-async/is_sync", "reqwest/blocking"]
+
+[[example]]
+name = "simple"
