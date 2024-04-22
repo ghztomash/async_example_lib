@@ -1,5 +1,5 @@
 use crate::{error::Error, provider::Provider, response::Response};
-use reqwest::RequestBuilder;
+use super::client::RequestBuilder;
 
 pub struct HttpBin;
 

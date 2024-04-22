@@ -1,11 +1,12 @@
 pub mod httpbin;
 pub mod mock;
 
+mod client;
+
 use crate::error::Error;
 use crate::response::Response;
 
-use reqwest::Client;
-use reqwest::RequestBuilder;
+use client::{Client, RequestBuilder};
 use reqwest::StatusCode;
 
 pub trait Provider {
@@ -63,7 +64,8 @@ impl Service {
     }
 }
 
-async fn handle_response(response: reqwest::Result<reqwest::Response>) -> Result<String, Error> {
+#[maybe_async::maybe_async]
+async fn handle_response(response: reqwest::Result<client::Response>) -> Result<String, Error> {
     match response {
         Ok(response) => match response.status() {
             StatusCode::OK => Ok(response.text().await.unwrap()),
@@ -77,7 +79,10 @@ async fn handle_response(response: reqwest::Result<reqwest::Response>) -> Result
 mod tests {
     use super::*;
 
-    #[tokio::test]
+    #[maybe_async::test(
+        feature="blocking",
+        async(not(feature="blocking"), tokio::test)
+    )]
     async fn test_make_request() {
         let expected = "hello mock".to_string();
         let provider = Service::new(ServiceProvider::Mock);
@@ -85,14 +90,20 @@ mod tests {
         assert_eq!(response.content, expected);
     }
 
-    #[tokio::test]
+    #[maybe_async::test(
+        feature="blocking",
+        async(not(feature="blocking"), tokio::test)
+    )]
     async fn test_handle_response() {
         let response = reqwest::get("https://httpbin.org/status/200").await;
         let body = handle_response(response).await;
         assert!(body.is_ok(), "Response is an error {:#?}", body);
     }
 
-    #[tokio::test]
+    #[maybe_async::test(
+        feature="blocking",
+        async(not(feature="blocking"), tokio::test)
+    )]
     async fn test_handle_response_error() {
         let response = reqwest::get("https://httpbin.org/status/500").await;
         let body = handle_response(response).await;

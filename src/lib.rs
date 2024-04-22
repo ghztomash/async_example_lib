@@ -16,7 +16,10 @@ pub async fn perform_request() -> Result<Response, Error> {
 mod tests {
     use super::*;
 
-    #[tokio::test]
+    #[maybe_async::test(
+        feature="blocking",
+        async(not(feature="blocking"), tokio::test)
+    )]
     async fn it_works() {
         let result = perform_request().await;
         assert!(result.is_ok());
