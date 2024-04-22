@@ -1,17 +1,9 @@
 use std::error::Error;
 
-#[maybe_async::async_impl]
-#[tokio::main]
+#[cfg_attr(not(feature = "blocking"), tokio::main)]
+#[maybe_async::maybe_async]
 async fn main() -> Result<(), Box<dyn Error>> {
     let result = example_lib::perform_request().await?;
     println!("Hello world: {} ", result.content);
     Ok(())
 }
-
-#[maybe_async::sync_impl]
-fn main() -> Result<(), Box<dyn Error>> {
-    let result = example_lib::perform_request()?;
-    println!("Hello world: {} ", result.content);
-    Ok(())
-}
-
